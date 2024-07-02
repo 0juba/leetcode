@@ -33,6 +33,13 @@ func FuzzContainsDuplicates(f *testing.F) {
 	})
 }
 
+// 11    	      27	  43078397
+func BenchmarkContainsDuplicatesRegexBased(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		containsDuplicateBasedOnRegex(helperGenSlice())
+	}
+}
+
 // Result: 11    	       1	2017471625 ns/op
 func BenchmarkContainsDuplicatesBruteForceBased(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -52,6 +59,13 @@ func BenchmarkContainsDuplicateSortBased(b *testing.B) {
 func BenchmarkContainsDuplicate(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		containsDuplicate(helperGenSlice())
+	}
+}
+
+// 11    	     100	  18383199
+func BenchmarkContainsDuplicateArrayBased(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		containsDuplicateArrayBased(helperGenSlice())
 	}
 }
 
@@ -83,6 +97,8 @@ func Test_containsDuplicate(t *testing.T) {
 			assert.Equal(t, tt.want, containsDuplicate(tt.nums))
 			assert.Equal(t, tt.want, containsDuplicateSortBased(tt.nums))
 			assert.Equal(t, tt.want, containsDuplicateBruteForce(tt.nums))
+			assert.Equal(t, tt.want, containsDuplicateArrayBased(tt.nums))
+			assert.Equal(t, tt.want, containsDuplicateBasedOnRegex(tt.nums))
 		})
 	}
 }
