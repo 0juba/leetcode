@@ -46,7 +46,7 @@ func findSubstring(s string, words []string) []int {
 	}
 
 	calc := make([]int, len(wordsIndex))
-	for i := 0; i < len(s)-substrLen+1; i++ {
+	for i := 0; i < len(s)-substrLen*len(words)+1; i++ {
 		copy(calc, stat)
 		foundMatches := 0
 		for j := i; j < len(s)-substrLen+1; {
