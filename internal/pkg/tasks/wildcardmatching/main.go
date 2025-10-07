@@ -18,6 +18,9 @@ func isMatch(s string, p string) bool {
 	}
 
 	if len(p) == 3 {
+		if p[0] == '*' && p[2] == '*' {
+			return strings.Index(s, string(p[1])) != -1
+		}
 		if p[0] == '*' {
 			return s[len(s)-2:] == p[1:]
 		}

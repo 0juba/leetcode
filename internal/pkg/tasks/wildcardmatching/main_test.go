@@ -138,6 +138,12 @@ func Test_isMatch(t *testing.T) {
 			s:    "areadtb",
 			want: true,
 		},
+		{
+			name: "asterisk *a* len = 3",
+			p:    "*a*",
+			s:    "testaaaaaatestaaaaaa",
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
