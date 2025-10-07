@@ -3,45 +3,55 @@ package wildcardmatching
 import "strings"
 
 func isMatch(s string, p string) bool {
-	if s == p {
-		return true
-	}
-
-	if strings.Index(p, "?") != -1 {
-		return isMatchQuestion(s, p)
-	}
-
 	p = compressAsterisks(p)
 
-	if p == "*" {
-		return true
+	var i, j int
+	for i < len(s) && j < len(p) {
+		if p[j] == '?' || s[i] == p[j] {
+			i++
+			j++
+			continue
+		} else if p[j] == '*' {
+			stopChar := byte(0)
+			if j+1 < len(p) {
+				stopChar = p[j+1]
+			} else {
+				// Это конец шаблона, дальше может быть что угодно
+				return true
+			}
+
+			// просто нужно промотать до оставшейся длины шаблона
+			if stopChar == '?' {
+				for ; i < len(s) && len(s)-i > len(p)-j-1; i++ {
+				}
+				continue
+			}
+
+			// мне нужно найти стоп символ для текущей звездочки
+			// стоп символ нужно искать с конца
+			// начальный индекс будет равен оставшейся длине шаблона
+			// если начальный индекс больше чем сама строка - то проверка пройдена
+			found := false
+			for k := len(p) - j - 1; k > -1 && len(s) > k; k-- {
+				if s[k] == stopChar {
+					i = k
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return false
+			}
+
+			j++
+			continue
+		}
+
+		return false
 	}
 
-	if len(p) == 3 {
-		if p[0] == '*' && p[2] == '*' {
-			return strings.Index(s, string(p[1])) != -1
-		}
-		if p[0] == '*' {
-			return s[len(s)-2:] == p[1:]
-		}
-		if p[2] == '*' {
-			return s[0:2] == p[0:2]
-		}
-		if p[1] == '*' {
-			return s[0] == p[0] && s[len(s)-1] == p[2]
-		}
-	}
-
-	if len(p) == 2 {
-		if p[0] == '*' {
-			return s[len(s)-1] == p[1]
-		}
-		if p[1] == '*' {
-			return s[0] == p[0]
-		}
-	}
-
-	return false
+	return len(s) == i && len(p) == j
 }
 
 func compressAsterisks(s string) string {
