@@ -1,0 +1,53 @@
+package wildcardmatching
+
+import "testing"
+
+func Test_isMatch(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		p    string
+		want bool
+	}{
+		{
+			name: "empty",
+			want: true,
+		},
+		{
+			name: "len(s) > len(p)",
+			p:    "test",
+			s:    "tes",
+		},
+		{
+			name: "?, len = 1",
+			p:    "?",
+			s:    "t",
+			want: true,
+		},
+		{
+			name: "??, len = 2",
+			p:    "??",
+			s:    "tt",
+			want: true,
+		},
+		{
+			name: "a?, len = 2",
+			p:    "a?",
+			s:    "at",
+			want: true,
+		},
+		{
+			name: "?a, len = 2",
+			p:    "?a",
+			s:    "ta",
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isMatch(tt.s, tt.p); got != tt.want {
+				t.Errorf("isMatch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
