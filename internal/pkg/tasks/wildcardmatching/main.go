@@ -5,6 +5,18 @@ import "strings"
 func isMatch(s string, p string) bool {
 	p = compressAsterisks(p)
 
+	if p == "*" {
+		return true
+	}
+
+	if s == "" && len(p) != 0 {
+		return false
+	}
+
+	if len(p) == 0 {
+		return true
+	}
+
 	var i, j int
 	for i < len(s) && j < len(p) {
 		if p[j] == '?' || s[i] == p[j] {
@@ -16,23 +28,17 @@ func isMatch(s string, p string) bool {
 			if j+1 < len(p) {
 				stopChar = p[j+1]
 			} else {
-				// Это конец шаблона, дальше может быть что угодно
 				return true
 			}
 
-			// просто нужно промотать до оставшейся длины шаблона
 			if stopChar == '?' {
 				for ; i < len(s) && len(s)-i > len(p)-j-1; i++ {
 				}
 				continue
 			}
 
-			// мне нужно найти стоп символ для текущей звездочки
-			// стоп символ нужно искать с конца
-			// начальный индекс будет равен оставшейся длине шаблона
-			// если начальный индекс больше чем сама строка - то проверка пройдена
 			found := false
-			for k := len(p) - j - 1; k > -1 && len(s) > k; k-- {
+			for k := len(s) - len(p) + j + 1; k > -1 && len(s) > k; k-- {
 				if s[k] == stopChar {
 					i = k
 					found = true
