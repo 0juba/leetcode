@@ -17,6 +17,18 @@ func isMatch(s string, p string) bool {
 		return true
 	}
 
+	if len(p) == 3 {
+		if p[0] == '*' {
+			return s[len(s)-2:] == p[1:]
+		}
+		if p[2] == '*' {
+			return s[0:2] == p[0:2]
+		}
+		if p[1] == '*' {
+			return s[0] == p[0] && s[len(s)-1] == p[2]
+		}
+	}
+
 	if len(p) == 2 {
 		if p[0] == '*' {
 			return s[len(s)-1] == p[1]

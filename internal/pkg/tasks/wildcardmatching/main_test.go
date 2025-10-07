@@ -120,6 +120,24 @@ func Test_isMatch(t *testing.T) {
 			s:    "abcd",
 			want: true,
 		},
+		{
+			name: "asterisk *aa len = 3",
+			p:    "*ab",
+			s:    "readyab",
+			want: true,
+		},
+		{
+			name: "asterisk aa* len = 3",
+			p:    "ab*",
+			s:    "abready",
+			want: true,
+		},
+		{
+			name: "asterisk a*a len = 3",
+			p:    "a*b",
+			s:    "areadtb",
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
