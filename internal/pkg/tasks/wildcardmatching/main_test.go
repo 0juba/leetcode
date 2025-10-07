@@ -78,6 +78,12 @@ func Test_isMatch(t *testing.T) {
 			s:    "era",
 			want: true,
 		},
+		{
+			name: "hello world",
+			p:    "h?l?o?w?rl?",
+			s:    "hello world",
+			want: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
