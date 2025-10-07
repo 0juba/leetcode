@@ -11,6 +11,8 @@ func isMatch(s string, p string) bool {
 		return isMatchQuestion(s, p)
 	}
 
+	p = compressAsterisks(p)
+
 	if p == "*" {
 		return true
 	}
@@ -25,6 +27,24 @@ func isMatch(s string, p string) bool {
 	}
 
 	return false
+}
+
+func compressAsterisks(s string) string {
+	buf := strings.Builder{}
+	prev := byte(0)
+	for i := range s {
+		if s[i] == '*' {
+			if prev != '*' {
+				buf.WriteByte(s[i])
+			}
+		} else {
+			buf.WriteByte(s[i])
+		}
+
+		prev = s[i]
+	}
+
+	return buf.String()
 }
 
 func isMatchQuestion(s string, p string) bool {
