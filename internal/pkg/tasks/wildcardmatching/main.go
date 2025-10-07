@@ -7,6 +7,10 @@ func isMatch(s string, p string) bool {
 		return true
 	}
 
+	if p == "*" {
+		return true
+	}
+
 	if strings.Index(p, "?") != -1 {
 		return isMatchQuestion(s, p)
 	}
