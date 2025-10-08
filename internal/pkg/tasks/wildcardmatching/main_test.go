@@ -151,6 +151,12 @@ func Test_isMatch(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "asterisk a*a len = 3",
+			p:    "*a*b",
+			s:    "tesareadtb",
+			want: true,
+		},
+		{
 			name: "asterisk *a* len = 3",
 			p:    "*a*",
 			s:    "testaaaaaatestaaaaaa",
@@ -189,6 +195,24 @@ func Test_isMatch(t *testing.T) {
 			name: "testcase 94",
 			s:    "abcdef",
 			p:    "a?de*",
+			want: false,
+		},
+		{
+			name: "testcase 1512",
+			s:    "aaa",
+			p:    "aa",
+			want: false,
+		},
+		{
+			name: "testcase 1522",
+			s:    "b",
+			p:    "?*?",
+			want: false,
+		},
+		{
+			name: "testcase 1523",
+			s:    "ab",
+			p:    "*a",
 			want: false,
 		},
 	}

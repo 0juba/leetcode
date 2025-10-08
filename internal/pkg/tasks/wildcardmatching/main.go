@@ -1,6 +1,8 @@
 package wildcardmatching
 
-import "strings"
+import (
+	"strings"
+)
 
 func isMatch(s string, p string) bool {
 	if s == p {
@@ -32,6 +34,10 @@ func isMatch(s string, p string) bool {
 		return true
 	}
 
+	if len(patterns) > len(s) {
+		return false
+	}
+
 	delta := 0
 	matches := make([][]int, 0, len(patterns))
 	if p[0] == '*' {
@@ -48,7 +54,7 @@ func isMatch(s string, p string) bool {
 	}
 
 	if p[len(p)-1] == '*' {
-		matches = append(matches, []int{len(s)})
+		matches = append(matches, []int{len(s) - 1})
 		patterns = append(patterns, "")
 	}
 
@@ -56,48 +62,34 @@ func isMatch(s string, p string) bool {
 		return false
 	}
 
-	prevMaxPos := -1
+	prevMaxPos := len(s)
 
 	var viewedLen int
-	if p[len(p)-1] == '*' {
-		viewedLen = 0
-	} else {
-		last := matches[len(matches)-1]
-		viewedLen = len(s) - last[len(last)-1]
-	}
 
 	for i := len(matches) - 1; i > -1; i-- {
 		positions := matches[i]
-		if prevMaxPos == -1 {
-			prevMaxPos = positions[len(positions)-1]
-		} else {
-			found := false
-			for j := len(positions) - 1; j > -1; j-- {
-				if positions[j] < prevMaxPos {
-					validSubstrLen := true
-					if i-delta > -1 {
-						validSubstrLen = len(patterns[i-delta]) <= prevMaxPos-positions[j]
-					}
+		found := false
+		for j := len(positions) - 1; j > -1; j-- {
+			if positions[j] < prevMaxPos {
+				validSubstrLen := true
+				if i-delta > -1 {
+					validSubstrLen = len(patterns[i-delta]) <= prevMaxPos-positions[j]
+				}
 
-					if validSubstrLen {
-						found = true
-						if i == 0 {
-							viewedLen += prevMaxPos - positions[0]
-							prevMaxPos = positions[0]
-						} else {
-							viewedLen += prevMaxPos - positions[j]
-							prevMaxPos = positions[j]
-						}
-						break
-					}
-				} else if i == 0 && positions[j] == prevMaxPos {
+				if validSubstrLen {
 					found = true
+					viewedLen += prevMaxPos - positions[j]
+					prevMaxPos = positions[j]
+
 					break
 				}
+			} else if i == 0 && positions[j] == prevMaxPos {
+				found = true
+				break
 			}
-			if !found {
-				return false
-			}
+		}
+		if !found {
+			return false
 		}
 	}
 
@@ -115,10 +107,8 @@ func findAllMatches(s, p string) []int {
 		}
 		if j == len(p) {
 			result = append(result, i)
-			i += len(p)
-		} else {
-			i++
 		}
+		i++
 	}
 
 	return result
