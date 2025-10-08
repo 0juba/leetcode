@@ -3,61 +3,69 @@ package wildcardmatching
 import "strings"
 
 func isMatch(s string, p string) bool {
-	p = compressAsterisks(p)
-
-	if p == "*" {
+	if s == p {
 		return true
 	}
 
-	if s == "" && len(p) != 0 {
+	if p == "" {
 		return false
 	}
 
-	if len(p) == 0 {
-		return true
+	p = compressAsterisks(p)
+	var patterns []string
+	buf := strings.Builder{}
+	patternsLength := 0
+	for i := range p {
+		switch {
+		case p[i] == '*':
+			if buf.Len() != 0 {
+				patternsLength += buf.Len()
+				patterns = append(patterns, buf.String())
+				buf.Reset()
+			}
+
+			patterns = append(patterns, "")
+		default:
+			buf.WriteByte(p[i])
+		}
+	}
+	if buf.Len() != 0 {
+		patternsLength += buf.Len()
+		patterns = append(patterns, buf.String())
 	}
 
-	var i, j int
-	for i < len(s) && j < len(p) {
-		if p[j] == '?' || s[i] == p[j] {
-			i++
-			j++
-			continue
-		} else if p[j] == '*' {
-			stopChar := byte(0)
-			if j+1 < len(p) {
-				stopChar = p[j+1]
-			} else {
-				return true
-			}
-
-			if stopChar == '?' {
-				for ; i < len(s) && len(s)-i > len(p)-j-1; i++ {
-				}
-				continue
-			}
-
-			found := false
-			for k := len(s) - len(p) + j + 1; k > -1 && len(s) > k; k-- {
-				if s[k] == stopChar {
-					i = k
-					found = true
-					break
-				}
-			}
-
-			if !found {
-				return false
-			}
-
-			j++
+	pos := 0
+	wasAsterisk := false
+	for _, pattern := range patterns {
+		if pattern == "" {
+			wasAsterisk = true
 			continue
 		}
 
-		return false
+		if len(s) < patternsLength || len(s[pos:]) < patternsLength {
+			return false
+		}
+
+		patternsLength -= len(pattern)
+		var idx int
+		if !wasAsterisk {
+			idx = indexByWildcardFromStart(s[pos:], pattern, 0)
+		} else {
+			idx = indexByWildcardFromEnd(s[pos:len(s)-patternsLength], pattern, 0)
+		}
+		if idx == -1 {
+			return false
+		}
+
+		pos += idx + len(pattern)
+		wasAsterisk = false
 	}
 
-	return len(s) == i && len(p) == j
+	if len(patterns) != 0 {
+		return patternsLength == 0 && (patterns[len(patterns)-1] == "" || pos == len(s))
+	}
+
+	return true
 }
 
 func compressAsterisks(s string) string {
@@ -78,16 +86,55 @@ func compressAsterisks(s string) string {
 	return buf.String()
 }
 
-func isMatchQuestion(s string, p string) bool {
-	if len(s) != len(p) {
-		return false
+func indexByWildcardFromEnd(s string, p string, start int) int {
+	if len(s) < len(p) {
+		return -1
 	}
 
-	for i := 0; i < len(s); i++ {
-		if s[i] != p[i] && p[i] != '?' {
-			return false
+	var i, j int
+	for i, j = len(s)-1, len(p)-1; i >= start && j > -1; {
+		if s[i] != p[j] && p[j] != '?' {
+			i += len(p) - j - 2
+			j = len(p) - 1
+		} else {
+			j--
+			i--
 		}
 	}
 
-	return true
+	if i+1 < start {
+		return -1
+	}
+
+	if j == -1 {
+		return i + 1
+	}
+
+	return -1
+}
+
+func indexByWildcardFromStart(s string, p string, start int) int {
+	if len(s) < len(p) {
+		return -1
+	}
+
+	var i, j int
+	i = start
+	prevStart := start
+	for i < len(s) && j < len(p) {
+		if s[i] != p[j] && p[j] != '?' {
+			i = prevStart + 1
+			prevStart = i
+			j = 0
+		} else {
+			j++
+			i++
+		}
+	}
+
+	if j == len(p) {
+		return i - len(p)
+	}
+
+	return -1
 }

@@ -14,9 +14,18 @@ func Test_isMatch(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "empty wildcard",
+			s:    "a",
+		},
+		{
 			name: "len(s) > len(p)",
 			p:    "test",
 			s:    "tes",
+		},
+		{
+			name: "example #1",
+			p:    "t",
+			s:    "tt",
 		},
 		{
 			name: "?, len = 1",
@@ -149,6 +158,30 @@ func Test_isMatch(t *testing.T) {
 			p:    "*a?aa",
 			s:    "testaaaaaatestaaaaaa",
 			want: true,
+		},
+		{
+			name: "testcase 30",
+			p:    "*abc???de*",
+			s:    "abcabczzzde",
+			want: true,
+		},
+		{
+			name: "testcase 1594",
+			s:    "mississippi",
+			p:    "*miss*iss*",
+			want: true,
+		},
+		{
+			name: "testcase 1586",
+			s:    "mississippi",
+			p:    "m*iss*iss*",
+			want: true,
+		},
+		{
+			name: "testcase 94",
+			s:    "abcdef",
+			p:    "a?de*",
+			want: false,
 		},
 	}
 	for _, tt := range tests {
