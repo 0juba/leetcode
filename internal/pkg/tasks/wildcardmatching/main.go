@@ -11,130 +11,115 @@ func isMatch(s string, p string) bool {
 		return false
 	}
 
-	p = compressAsterisks(p)
 	var patterns []string
 	buf := strings.Builder{}
-	patternsLength := 0
 	for i := range p {
 		switch {
 		case p[i] == '*':
 			if buf.Len() != 0 {
-				patternsLength += buf.Len()
 				patterns = append(patterns, buf.String())
 				buf.Reset()
 			}
-
-			patterns = append(patterns, "")
 		default:
 			buf.WriteByte(p[i])
 		}
 	}
 	if buf.Len() != 0 {
-		patternsLength += buf.Len()
 		patterns = append(patterns, buf.String())
 	}
 
-	pos := 0
-	wasAsterisk := false
+	if len(patterns) == 0 {
+		return true
+	}
+
+	delta := 0
+	matches := make([][]int, 0, len(patterns))
+	if p[0] == '*' {
+		matches = append(matches, []int{0})
+		delta++
+	}
 	for _, pattern := range patterns {
-		if pattern == "" {
-			wasAsterisk = true
-			continue
-		}
-
-		if len(s) < patternsLength || len(s[pos:]) < patternsLength {
+		found := findAllMatches(s, pattern)
+		if len(found) == 0 {
 			return false
 		}
 
-		patternsLength -= len(pattern)
-		var idx int
-		if !wasAsterisk {
-			idx = indexByWildcardFromStart(s[pos:], pattern, 0)
+		matches = append(matches, found)
+	}
+
+	if p[len(p)-1] == '*' {
+		matches = append(matches, []int{len(s)})
+		patterns = append(patterns, "")
+	}
+
+	if len(matches) == 0 {
+		return false
+	}
+
+	prevMaxPos := -1
+
+	var viewedLen int
+	if p[len(p)-1] == '*' {
+		viewedLen = 0
+	} else {
+		last := matches[len(matches)-1]
+		viewedLen = len(s) - last[len(last)-1]
+	}
+
+	for i := len(matches) - 1; i > -1; i-- {
+		positions := matches[i]
+		if prevMaxPos == -1 {
+			prevMaxPos = positions[len(positions)-1]
 		} else {
-			idx = indexByWildcardFromEnd(s[pos:len(s)-patternsLength], pattern, 0)
-		}
-		if idx == -1 {
-			return false
-		}
+			found := false
+			for j := len(positions) - 1; j > -1; j-- {
+				if positions[j] < prevMaxPos {
+					validSubstrLen := true
+					if i-delta > -1 {
+						validSubstrLen = len(patterns[i-delta]) <= prevMaxPos-positions[j]
+					}
 
-		pos += idx + len(pattern)
-		wasAsterisk = false
-	}
-
-	if len(patterns) != 0 {
-		return patternsLength == 0 && (patterns[len(patterns)-1] == "" || pos == len(s))
-	}
-
-	return true
-}
-
-func compressAsterisks(s string) string {
-	buf := strings.Builder{}
-	prev := byte(0)
-	for i := range s {
-		if s[i] == '*' {
-			if prev != '*' {
-				buf.WriteByte(s[i])
+					if validSubstrLen {
+						found = true
+						if i == 0 {
+							viewedLen += prevMaxPos - positions[0]
+							prevMaxPos = positions[0]
+						} else {
+							viewedLen += prevMaxPos - positions[j]
+							prevMaxPos = positions[j]
+						}
+						break
+					}
+				} else if i == 0 && positions[j] == prevMaxPos {
+					found = true
+					break
+				}
 			}
-		} else {
-			buf.WriteByte(s[i])
-		}
-
-		prev = s[i]
-	}
-
-	return buf.String()
-}
-
-func indexByWildcardFromEnd(s string, p string, start int) int {
-	if len(s) < len(p) {
-		return -1
-	}
-
-	var i, j int
-	for i, j = len(s)-1, len(p)-1; i >= start && j > -1; {
-		if s[i] != p[j] && p[j] != '?' {
-			i += len(p) - j - 2
-			j = len(p) - 1
-		} else {
-			j--
-			i--
+			if !found {
+				return false
+			}
 		}
 	}
 
-	if i+1 < start {
-		return -1
-	}
-
-	if j == -1 {
-		return i + 1
-	}
-
-	return -1
+	return viewedLen == len(s)
 }
 
-func indexByWildcardFromStart(s string, p string, start int) int {
-	if len(s) < len(p) {
-		return -1
-	}
-
-	var i, j int
-	i = start
-	prevStart := start
-	for i < len(s) && j < len(p) {
-		if s[i] != p[j] && p[j] != '?' {
-			i = prevStart + 1
-			prevStart = i
-			j = 0
+func findAllMatches(s, p string) []int {
+	var result []int
+	for i := 0; i < len(s); {
+		j := 0
+		for ; j < len(p) && i+j < len(s); j++ {
+			if p[j] != s[i+j] && p[j] != '?' {
+				break
+			}
+		}
+		if j == len(p) {
+			result = append(result, i)
+			i += len(p)
 		} else {
-			j++
 			i++
 		}
 	}
 
-	if j == len(p) {
-		return i - len(p)
-	}
-
-	return -1
+	return result
 }

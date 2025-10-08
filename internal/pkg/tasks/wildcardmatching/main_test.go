@@ -1,6 +1,9 @@
 package wildcardmatching
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func Test_isMatch(t *testing.T) {
 	tests := []struct {
@@ -178,6 +181,11 @@ func Test_isMatch(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "testcase 1530",
+			s:    "mississippi",
+			p:    "m??*ss*?i*pi",
+		},
+		{
 			name: "testcase 94",
 			s:    "abcdef",
 			p:    "a?de*",
@@ -188,6 +196,29 @@ func Test_isMatch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := isMatch(tt.s, tt.p); got != tt.want {
 				t.Errorf("isMatch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_findAllMatches(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		p    string
+		want []int
+	}{
+		{
+			name: "1",
+			s:    "mississipiiss",
+			p:    "i?s",
+			want: []int{1, 4, 9},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := findAllMatches(tt.s, tt.p); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("findAllMatches() = %v, want %v", got, tt.want)
 			}
 		})
 	}
