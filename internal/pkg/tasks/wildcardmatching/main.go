@@ -1,66 +1,8 @@
 package wildcardmatching
 
-import (
-	"strings"
-)
+import "strings"
 
 func isMatch(s string, p string) bool {
-	if p == "*" || p == "" && s == "" {
-		return true
-	}
-
-	if p == "" {
-		return false
-	}
-
-	var patterns []string
-	buf := strings.Builder{}
-	for i := range p {
-		switch {
-		case p[i] == '*':
-			if buf.Len() != 0 {
-				patterns = append(patterns, buf.String())
-				buf.Reset()
-			}
-			patterns = append(patterns, "*")
-		default:
-			buf.WriteByte(p[i])
-		}
-	}
-	if buf.Len() != 0 {
-		patterns = append(patterns, buf.String())
-	}
-
-	pos := 0
-	hasAsterisk := false
-	for i := 0; i < len(patterns); i++ {
-		if patterns[i] == "*" {
-			hasAsterisk = true
-			continue
-		}
-
-		matchFound := false
-		for ; len(s) >= pos+len(patterns[i]); pos++ {
-			if match(s[pos:pos+len(patterns[i])], patterns[i]) {
-				matchFound = true
-				pos += len(patterns[i])
-				break
-			} else if !hasAsterisk {
-				return false
-			}
-		}
-
-		if !matchFound {
-			return false
-		}
-
-		hasAsterisk = false
-	}
-
-	return hasAsterisk || len(s) == pos
-}
-
-func isMatch2(s string, p string) bool {
 	if s == p {
 		return true
 	}
@@ -69,117 +11,77 @@ func isMatch2(s string, p string) bool {
 		return false
 	}
 
-	var patterns []string
-	buf := strings.Builder{}
-	for i := range p {
-		switch {
-		case p[i] == '*':
-			if buf.Len() != 0 {
-				patterns = append(patterns, buf.String())
-				buf.Reset()
-			}
-		default:
-			buf.WriteByte(p[i])
+	parts := split(p, '*')
+	pos := 0
+	lastAsterisk := -1
+	for i, part := range parts {
+		if part == "" {
+			lastAsterisk = i
+			continue
 		}
-	}
-	if buf.Len() != 0 {
-		patterns = append(patterns, buf.String())
+
+		idx := index(s[pos:], part)
+		if idx == -1 || (lastAsterisk == -1 && idx != 0) {
+			return false
+		}
+
+		pos += idx + len(part)
 	}
 
-	if len(patterns) == 0 {
+	if len(s) == pos || lastAsterisk == len(parts)-1 {
 		return true
 	}
 
-	if len(patterns) > len(s) {
-		return false
+	if lastAsterisk != -1 {
+		lastTpl := parts[len(parts)-1]
+
+		return index(s[len(s)-len(lastTpl):], lastTpl) != -1
 	}
 
-	delta := 0
-	matches := make([][]int, 0, len(patterns))
-	if p[0] == '*' {
-		matches = append(matches, []int{0})
-		delta++
-	}
-	for _, pattern := range patterns {
-		found := findAllMatches(s, pattern)
-		if len(found) == 0 {
-			return false
-		}
-
-		matches = append(matches, found)
-	}
-
-	if p[len(p)-1] == '*' {
-		matches = append(matches, []int{len(s) - 1})
-		patterns = append(patterns, "")
-	}
-
-	if len(matches) == 0 {
-		return false
-	}
-
-	prevMaxPos := len(s)
-
-	var viewedLen int
-
-	for i := len(matches) - 1; i > -1; i-- {
-		positions := matches[i]
-		found := false
-		for j := len(positions) - 1; j > -1; j-- {
-			if positions[j] < prevMaxPos {
-				validSubstrLen := true
-				if i-delta > -1 {
-					validSubstrLen = len(patterns[i-delta]) <= prevMaxPos-positions[j]
-				}
-
-				if validSubstrLen {
-					found = true
-					viewedLen += prevMaxPos - positions[j]
-					prevMaxPos = positions[j]
-
-					break
-				}
-			} else if i == 0 && positions[j] == prevMaxPos {
-				found = true
-				break
-			}
-		}
-		if !found {
-			return false
-		}
-	}
-
-	return viewedLen == len(s)
+	return false
 }
 
-func match(s, p string) bool {
-	if len(s) != len(p) {
-		return false
-	}
-
-	for i := 0; i < len(s); i++ {
-		if s[i] != p[i] && p[i] != '?' {
-			return false
-		}
-	}
-
-	return true
-}
-
-func findAllMatches(s, p string) []int {
-	var result []int
-	for i := 0; i < len(s); {
-		j := 0
-		for ; j < len(p) && i+j < len(s); j++ {
-			if p[j] != s[i+j] && p[j] != '?' {
-				break
+func split(s string, ch byte) []string {
+	var result []string
+	buf := strings.Builder{}
+	for i := range s {
+		if s[i] == ch {
+			if buf.Len() != 0 {
+				result = append(result, buf.String())
+				buf.Reset()
 			}
+			result = append(result, "")
+		} else {
+			buf.WriteByte(s[i])
 		}
-		if j == len(p) {
-			result = append(result, i)
-		}
-		i++
+	}
+
+	if buf.Len() != 0 {
+		result = append(result, buf.String())
 	}
 
 	return result
+}
+
+func index(s, substr string) int {
+	for pos := 0; pos < len(s); {
+		if len(substr)+pos <= len(s) {
+			k := pos
+			for ; k < pos+len(substr); k++ {
+				if s[k] != substr[k-pos] && substr[k-pos] != '?' {
+					break
+				}
+			}
+
+			if k == pos+len(substr) {
+				return pos
+			}
+
+			pos++
+		} else {
+			return -1
+		}
+	}
+
+	return -1
 }

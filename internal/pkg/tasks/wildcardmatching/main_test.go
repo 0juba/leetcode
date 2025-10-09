@@ -169,6 +169,18 @@ func Test_isMatch(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "testcase 1489",
+			p:    "***a",
+			s:    "aaaa",
+			want: true,
+		},
+		{
+			name: "testcase 1801",
+			s:    "abb",
+			p:    "**??",
+			want: true,
+		},
+		{
 			name: "testcase 30",
 			p:    "*abc???de*",
 			s:    "abcabczzzde",
@@ -184,6 +196,18 @@ func Test_isMatch(t *testing.T) {
 			name: "testcase 1586",
 			s:    "mississippi",
 			p:    "m*iss*iss*",
+			want: true,
+		},
+		{
+			name: "testcase 1586 #1",
+			s:    "missississippi",
+			p:    "m*iss*iss*",
+			want: true,
+		},
+		{
+			name: "testcase 1586 #1",
+			s:    "ississississ",
+			p:    "*iss",
 			want: true,
 		},
 		{
@@ -215,6 +239,12 @@ func Test_isMatch(t *testing.T) {
 			p:    "*a",
 			want: false,
 		},
+		{
+			name: "testcase 1623",
+			s:    "aaab",
+			p:    "b**",
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -225,24 +255,101 @@ func Test_isMatch(t *testing.T) {
 	}
 }
 
-func Test_findAllMatches(t *testing.T) {
+func Test_index(t *testing.T) {
 	tests := []struct {
-		name string
-		s    string
-		p    string
-		want []int
+		name   string
+		s      string
+		substr string
+		want   int
 	}{
 		{
-			name: "1",
-			s:    "mississipiiss",
-			p:    "i?s",
-			want: []int{1, 4, 9},
+			name:   "test #1",
+			s:      "aaa",
+			substr: "a",
+			want:   0,
+		},
+		{
+			name:   "test #2",
+			s:      "aaa",
+			substr: "?",
+			want:   0,
+		},
+		{
+			name:   "test #3",
+			s:      "aaa",
+			substr: "a?",
+			want:   0,
+		},
+		{
+			name:   "test #4",
+			s:      "aaa",
+			substr: "a??",
+			want:   0,
+		},
+		{
+			name:   "test #5",
+			s:      "aaa",
+			substr: "???",
+			want:   0,
+		},
+		{
+			name:   "test #6",
+			s:      "caaa",
+			substr: "a???",
+			want:   -1,
+		},
+		{
+			name:   "test #7",
+			s:      "ab",
+			substr: "b",
+			want:   1,
+		},
+		{
+			name:   "test #8",
+			s:      "abc",
+			substr: "b?",
+			want:   1,
+		},
+		{
+			name:   "test #9",
+			s:      "rabc",
+			substr: "?b?",
+			want:   1,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := findAllMatches(tt.s, tt.p); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("findAllMatches() = %v, want %v", got, tt.want)
+			if got := index(tt.s, tt.substr); got != tt.want {
+				t.Errorf("index() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_split(t *testing.T) {
+	type args struct {
+		s  string
+		ch byte
+	}
+	tests := []struct {
+		name string
+		s    string
+		ch   byte
+		want []string
+	}{
+		{
+			name: "test #1",
+			s:    "*a*b*c*",
+			ch:   '*',
+			want: []string{
+				"", "a", "", "b", "", "c", "",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := split(tt.s, tt.ch); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("split() = %v, want %v", got, tt.want)
 			}
 		})
 	}
