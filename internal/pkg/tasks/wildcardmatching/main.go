@@ -5,6 +5,62 @@ import (
 )
 
 func isMatch(s string, p string) bool {
+	if p == "*" || p == "" && s == "" {
+		return true
+	}
+
+	if p == "" {
+		return false
+	}
+
+	var patterns []string
+	buf := strings.Builder{}
+	for i := range p {
+		switch {
+		case p[i] == '*':
+			if buf.Len() != 0 {
+				patterns = append(patterns, buf.String())
+				buf.Reset()
+			}
+			patterns = append(patterns, "*")
+		default:
+			buf.WriteByte(p[i])
+		}
+	}
+	if buf.Len() != 0 {
+		patterns = append(patterns, buf.String())
+	}
+
+	pos := 0
+	hasAsterisk := false
+	for i := 0; i < len(patterns); i++ {
+		if patterns[i] == "*" {
+			hasAsterisk = true
+			continue
+		}
+
+		matchFound := false
+		for ; len(s) >= pos+len(patterns[i]); pos++ {
+			if match(s[pos:pos+len(patterns[i])], patterns[i]) {
+				matchFound = true
+				pos += len(patterns[i])
+				break
+			} else if !hasAsterisk {
+				return false
+			}
+		}
+
+		if !matchFound {
+			return false
+		}
+
+		hasAsterisk = false
+	}
+
+	return hasAsterisk || len(s) == pos
+}
+
+func isMatch2(s string, p string) bool {
 	if s == p {
 		return true
 	}
@@ -94,6 +150,20 @@ func isMatch(s string, p string) bool {
 	}
 
 	return viewedLen == len(s)
+}
+
+func match(s, p string) bool {
+	if len(s) != len(p) {
+		return false
+	}
+
+	for i := 0; i < len(s); i++ {
+		if s[i] != p[i] && p[i] != '?' {
+			return false
+		}
+	}
+
+	return true
 }
 
 func findAllMatches(s, p string) []int {
